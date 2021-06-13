@@ -1,0 +1,81 @@
+FROM mcr.microsoft.com/windows:20H2
+
+# Restore the default Windows shell for correct batch processing.
+SHELL ["cmd", "/S", "/C"]
+
+# Download the Build Tools 2017
+#
+# 2017 because 2015 build tools are included inside the 2017 installer!!!!
+#
+ADD https://aka.ms/vs/15/release/vs_BuildTools.exe C:/vs_BuildTools.exe
+
+# Install necessary dependencies
+#
+# --passive     Doesn't ask user input, not interactive
+# --wait        Synchronous
+# --norestart   Doesn't restart the Windows machine
+# --nocache     We don't care about building a cache, it's a one-time container 
+
+# Provides the tools required to build Universal Windows Platform applications
+# 8.88GB
+RUN C:/vs_BuildTools.exe --passive --wait --norestart --nocache --add Microsoft.VisualStudio.Workload.UniversalBuildTools --includeRecommended
+
+# VC++ 2015.3 v14.00 (v140) toolset for desktop 
+# 3.74GB
+RUN C:/vs_BuildTools.exe --passive --wait --norestart --nocache --add Microsoft.VisualStudio.Component.VC.140
+
+# Build Windows desktop applications using the Microsoft C++ toolset, ATL, or MFC
+# 4.03GB
+RUN C:/vs_BuildTools.exe --passive --wait --norestart --nocache --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended
+
+# Windows Universal CRT SDK
+# 1.86GB
+RUN C:/vs_BuildTools.exe --passive --wait --norestart --nocache --add Microsoft.Component.VC.Runtime.UCRTSDK
+
+# Windows 8.1 SDK	
+# 789MB
+RUN C:/vs_BuildTools.exe --passive --wait --norestart --nocache --add Microsoft.VisualStudio.Component.Windows81SDK
+
+# .NET Native	
+# 75.5MB
+RUN C:/vs_BuildTools.exe --passive --wait --norestart --nocache --add Microsoft.Component.NetFX.Native
+
+# .NET Framework 4.7.2 SDK
+# 
+RUN C:/vs_BuildTools.exe --passive --wait --norestart --nocache --add Microsoft.Net.Component.4.7.2.SDK
+
+# Provides the tools required to build MSBuild-based applications
+# 72.1MB
+RUN C:/vs_BuildTools.exe --passive --wait --norestart --nocache --add Microsoft.VisualStudio.Workload.MSBuildTools --includeRecommended
+
+RUN C:/vs_BuildTools.exe --passive --wait --norestart --nocache --add Microsoft.VisualStudio.Workload.ManagedDesktopBuildTools --includeRecommended
+
+RUN C:/vs_BuildTools.exe --passive --wait --norestart --nocache --add Microsoft.VisualStudio.Workload.AzureBuildTools --includeRecommended
+
+#RUN C:/vs_BuildTools.exe --passive --wait --norestart --nocache --add Microsoft.Net.Component.3.5.DeveloperTools
+
+# RUN C:/vs_BuildTools.exe --passive --wait --norestart --nocache --add Microsoft.VisualStudio.Workload.NetCoreBuildTools --includeRecommended
+
+# RUN C:/vs_BuildTools.exe --passive --wait --norestart --nocache --add Microsoft.VisualStudio.Workload.XamarinBuildTools --includeRecommended
+
+# RUN C:/vs_BuildTools.exe --passive --wait --norestart --nocache --add Microsoft.VisualStudio.Workload.NodeBuildTools --includeRecommended
+
+# RUN C:/vs_BuildTools.exe --passive --wait --norestart --nocache --add Microsoft.VisualStudio.Workload.DataBuildTools --includeRecommended
+
+# Add MsBuild to PATH
+RUN setx path "%path%;C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin"
+
+# We want the image building process to fail if MSBuild is not found in the path
+RUN MSBuild /version
+
+# Set current directory to the .sln file location
+# WORKDIR C:/source/Runner/VC_Runner
+
+#ADD docker_msbuild_fix.props C:/docker_msbuild_fix.props
+# ADD _compile.bat C:/compile.bat
+
+VOLUME C:/source/GameMaker
+
+
+CMD C:\source\GameMaker\Tools\bin\zeus_win_runner.bat C:\output
+# CMD ..\..\Tools\bin\zeus_win_runner.bat %YY_BASE_NAME%\output
